@@ -15,7 +15,8 @@
         "request": "2.45.0",
         "cheerio":"0.17.0",
         "q": "1.0.1",
-        "mysql":"2.5.1"
+        "mysql":"2.5.1",
+        "queue":"2.0.1"
     },
     "devDependencies": {
     },

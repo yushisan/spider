@@ -1,17 +1,18 @@
 var spider = require('../lib/spider');
-
-var db = require('../lib/mysql')();
+var Queue = require('queue');
+var DB = require('../lib/db');
 
 var testProxy = require('./test_proxy_speed');
-var dbConfig = ({
+var dbConfig = {
     connectionLimit: 10,
     host: 'localhost',
     port: 3306,
     user: 'root',
     passord: '',
     database: 'spider'
-});
-db.config(dbConfig);
+};
+//设置
+var db = new DB(dbConfig, 10e3);
 
 spider.get('http://www.youdaili.net/Daili/', function(data) {
     var count = 0;
@@ -23,6 +24,9 @@ spider.get('http://www.youdaili.net/Daili/', function(data) {
             count++;
         }
     }
+    //去除两天中重复的proxy
+    var uniqueObj = {};
+
     proxys.forEach(function(proxy) {
         spider.get(proxy, function(data) {
             var content = data.content;
@@ -35,15 +39,29 @@ spider.get('http://www.youdaili.net/Daili/', function(data) {
             });
             //获取代理list
             // console.log(arr);
+            //并发一次的队列
+            var queue = new Queue({
+                concurrency: 1
+            });
             arr.forEach(function(v) {
+                if (uniqueObj[v]) {
+                    //检查重复的代理，减少系统消耗
+                    return;
+                }
+                uniqueObj[v] = 1;
                 testProxy(v, 'http://guangdiu.com/m').then(function(data) {
-                    // console.log(data.speed, data.proxy);
-                    db.query('insert into proxy (proxy, speed) values (?,?)', [data.proxy, data.speed]).then(function() {
-                        console.log('success');
-                    }, function(err) {
-                        console.log(err);
+                    //使用闭包来完成queue的封装
+                    queue.push(function(cb) {
+                        db.query('insert into proxy (proxy, speed) values (?,?)', [data.proxy, data.speed]).then(function() {
+                            console.log(data.proxy+' → success');
+                            cb();
+                        }, function(err) {
+                            console.log(err);
+                            cb();
+                        });
                     });
-                });
+                    queue.start();
+                }, function() {});
             });
         }, {
             content: {

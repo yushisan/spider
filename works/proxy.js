@@ -1,5 +1,18 @@
 var spider = require('../lib/spider');
 
+var db = require('../lib/mysql')();
+
+var testProxy = require('./test_proxy_speed');
+var dbConfig = ({
+    connectionLimit: 10,
+    host: 'localhost',
+    port: 3306,
+    user: 'root',
+    passord: '',
+    database: 'spider'
+});
+db.config(dbConfig);
+
 spider.get('http://www.youdaili.net/Daili/', function(data) {
     var count = 0;
     var proxys = [];
@@ -10,18 +23,28 @@ spider.get('http://www.youdaili.net/Daili/', function(data) {
             count++;
         }
     }
-    var arr = [];
     proxys.forEach(function(proxy) {
         spider.get(proxy, function(data) {
             var content = data.content;
-            content = content.replace('&nbsp;','');
-            content = content.replace(/\r\n/g,'\n');
+            content = content.replace('&nbsp;', '');
+            content = content.replace(/\r\n/g, '\n');
             content = content.split(/\n/);
-            content.forEach(function(v){
+            var arr = [];
+            content.forEach(function(v) {
                 arr.push(v.split('@')[0]);
             });
-
-            console.log(arr);
+            //获取代理list
+            // console.log(arr);
+            arr.forEach(function(v) {
+                testProxy(v, 'http://guangdiu.com/m').then(function(data) {
+                    // console.log(data.speed, data.proxy);
+                    db.query('insert into proxy (proxy, speed) values (?,?)', [data.proxy, data.speed]).then(function() {
+                        console.log('success');
+                    }, function(err) {
+                        console.log(err);
+                    });
+                });
+            });
         }, {
             content: {
                 selector: '.newsdetail_cont .cont_font p',

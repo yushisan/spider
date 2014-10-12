@@ -1,10 +1,10 @@
 var spider = require('../lib/spider');
 var Queue = require('queue');
-var DB = require('../lib/db');
+var DB = require('../lib/db2');
 
 var testProxy = require('./test_proxy_speed');
 var dbConfig = {
-    connectionLimit: 10,
+    connectionLimit: 100,
     host: 'localhost',
     port: 3306,
     user: 'root',
@@ -52,16 +52,20 @@ spider.get('http://www.youdaili.net/Daili/', function(data) {
                 testProxy(v, 'http://guangdiu.com/m').then(function(data) {
                     //使用闭包来完成queue的封装
                     queue.push(function(cb) {
-                        db.query('insert into proxy (proxy, speed) values (?,?)', [data.proxy, data.speed]).then(function() {
-                            console.log(data.proxy+' → success');
-                            cb();
-                        }, function(err) {
-                            console.log(err);
+                        db.query('insert into proxy (proxy, speed) values (?,?)', [data.proxy, data.speed], function(err) {
+                            if (err) {
+                                console.log('insertdb error', err);
+                            } else {
+                                console.log(data.proxy + ' → success');
+
+                            }
                             cb();
                         });
                     });
                     queue.start();
-                }, function() {});
+                }, function(err) {
+                    // console.log('testProxy error', err);
+                });
             });
         }, {
             content: {

@@ -1,4 +1,4 @@
-var spider = require('../lib/spider');
+var spider = require('../../lib/spider');
 var Q = require('q');
 var spiderMan = function(url, proxy, timeout) {
     var opt = {
@@ -37,16 +37,22 @@ var spiderMan = function(url, proxy, timeout) {
                 },
                 prices: {
                     selector: 'h2 .emphricepart',
-                    handler: 'text'
+                    handler: function($node, $){
+                        var arr = [];
+                        $node.each(function(i, e){
+                            arr.push($(e).text().trim());
+                        });
+                        return arr.join(',');
+                    }
                 },
                 image: {
                     selector: '.showpic img',
                     handler: 'attr:src'
                 },
-                from: {
+                source: {
                     selector: '.infofrom',
                     handler: function($node, $){
-                        var c = $node.text().trim();
+                        var c = $node.text().trim().replace(/&nbsp;/g,' ');
                         return c.split(/\s/)[1].trim();
                     }
                 },
@@ -60,6 +66,8 @@ var spiderMan = function(url, proxy, timeout) {
     return defer.promise;
 }
 
-spiderMan('http://guangdiu.com/cate.php?k=baby&kf=tip').done(function(data) {
-    console.log(data);
-});
+module.exports = spiderMan;
+
+// spiderMan('http://guangdiu.com/cate.php?k=baby&kf=tip').done(function(data) {
+//     console.log(data);
+// });

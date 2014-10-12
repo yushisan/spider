@@ -1,6 +1,6 @@
-var spider = require('../lib/spider');
+var spider = require('../../lib/spider');
 var Q = require('q');
-var testProxy = require('./test_proxy_speed');
+var testProxy = require('../test_proxy_speed');
 
 function spiderMan(id, proxy, timeout) {
     var opt = {
@@ -31,7 +31,7 @@ function spiderMan(id, proxy, timeout) {
                 if(!content){
                     content = $node.html();
                 }
-                return content.replace(/<p>\s*<\/p>/,'').trim();
+                return content.replace(/<p>(\s*|[&nbsp;])<\/p>/,'').trim();
             }
         }
     });

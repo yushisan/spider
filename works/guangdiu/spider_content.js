@@ -1,6 +1,5 @@
 var spider = require('../../lib/spider');
 var Q = require('q');
-var testProxy = require('../test_proxy_speed');
 
 function spiderMan(id, proxy, timeout) {
     var opt = {
@@ -38,6 +37,9 @@ function spiderMan(id, proxy, timeout) {
     return defer.promise;
 }
 
+module.exports = spiderMan;
+/*
 spiderMan('825964').done(function(data) {
     console.log(data);
 });
+*/

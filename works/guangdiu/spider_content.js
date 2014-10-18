@@ -3,7 +3,7 @@ var Q = require('q');
 
 function spiderMan(id, proxy, timeout) {
     var opt = {
-        uri: 'http://guangdiu.com/m/loadsingle.php?id='+id,
+        uri: 'http://guangdiu.com/m/loadsingle.php?id=' + id,
         timeout: timeout || 5e3
     };
 
@@ -25,12 +25,15 @@ function spiderMan(id, proxy, timeout) {
     }, {
         content: {
             selector: '.remoteabstract',
-            handler: function($node, $){
+            handler: function($node, $) {
                 var content = $node.find('.hui-content-text').html();
-                if(!content){
+                if (!content) {
                     content = $node.html();
                 }
-                return content.replace(/<p>(\s*|[&nbsp;])<\/p>/,'').trim();
+                if(!content){
+                    content = '';
+                }
+                return (content || '').replace(/<p>(\s*|[&nbsp;])<\/p>/, '').trim();
             }
         }
     });

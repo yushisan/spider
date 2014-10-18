@@ -27,7 +27,7 @@ var spiderMan = function(url, proxy, timeout) {
             handler: {
                 id: {
                     selector: 'a.goodname',
-                    handler: function($node){
+                    handler: function($node) {
                         return $node.attr('href').match(/id=(\d+)/)[1];
                     }
                 },
@@ -37,9 +37,9 @@ var spiderMan = function(url, proxy, timeout) {
                 },
                 prices: {
                     selector: 'h2 .emphricepart',
-                    handler: function($node, $){
+                    handler: function($node, $) {
                         var arr = [];
-                        $node.each(function(i, e){
+                        $node.each(function(i, e) {
                             arr.push($(e).text().trim());
                         });
                         return arr.join(',');
@@ -49,10 +49,19 @@ var spiderMan = function(url, proxy, timeout) {
                     selector: '.showpic img',
                     handler: 'attr:src'
                 },
+                source_url: {
+                    selector: '.rightlinks .innergototobuybtn',
+                    handler: function($node, $){
+                        if($node.find('a').length){
+                            return $node.find('a').attr('href');
+                        }
+                        return $node.attr('href');
+                    }
+                },
                 source: {
                     selector: '.infofrom',
-                    handler: function($node, $){
-                        var c = $node.text().trim().replace(/&nbsp;/g,' ');
+                    handler: function($node, $) {
+                        var c = $node.text().trim().replace(/&nbsp;/g, ' ');
                         return c.split(/\s/)[1].trim();
                     }
                 },

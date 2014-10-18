@@ -6,6 +6,10 @@ var spiderURL = require('./spider_url');
 var Queue = require('queue');
 var Q = require('q');
 var Event = require('events').EventEmitter;
+var $ = require('./helper');
+var URL = require('url');
+
+var unqObj = {};
 
 var listArray = [
     'baby',
@@ -30,7 +34,7 @@ var index = 0;
 getProxyList(100)
 //2. 获取分类列表
 .then(function(proxyList) {
-
+    // console.log(proxyList);
     listArray.forEach(function(item) {
         getList(proxyList, item)
         //3.获取content详情
@@ -39,10 +43,12 @@ getProxyList(100)
     //4.获取url内容
     emitter.on('needURL', getURL)
     //5.插入数据库
-    .on('inserDB', insert)
+    .on('insertDB', insert)
         .on('error', function(err) {
             console.log(err);
-        })
+        });
+}, function(err) {
+    console.log('getProxyList error:', err);
 });
 
 //获取分类列表
@@ -59,6 +65,7 @@ function getList(proxyList, keywords) {
                 item.cate = cate;
                 item.time = Math.ceil(Date.now() / 1000);
             });
+            // console.log(data);
             deferred.resolve({
                 items: data,
                 proxyList: proxyList,
@@ -99,7 +106,7 @@ function getContent(data) {
         spiderContent(id, curProxy.proxy).then(function(c) {
             item.content = c.content;
             deferred.resolve();
-
+            // console.log(item);
             emitter.emit('needURL', item, curProxy, proxyList);
         }, function(err) {
             deferred.reject(err);
@@ -107,11 +114,18 @@ function getContent(data) {
         return deferred.promise;
     };
     items.forEach(function(item) {
-        handler(item).then(function(data) {}, function(err) {
-            badProxy(curProxy, proxyList);
-            curProxy = proxyList[index++];
-            handler(item);
-        });
+        if (unqObj[item.id]) {
+            //说明已经抓取了，直接添加关系链
+            console.log('不是唯一id：' + id);
+            insertLinkDB(item.id, item.cate);
+        } else {
+            unqObj[item.id] = 1;
+            handler(item).then(function(data) {}, function(err) {
+                badProxy(curProxy, proxyList);
+                curProxy = proxyList[index++];
+                handler(item);
+            });
+        }
     });
     return emitter;
 }
@@ -120,19 +134,33 @@ function getContent(data) {
 function getURL(item, curProxy, proxyList) {
     var id = item.id;
     var count = 0;
-    spiderURL(id, curProxy).then(function(data) {
-        item.url = data.url;
-        item.source_url = data.source_url;
-        emitter.emit('inserDB', item);
-    }, function(err) {
-        badProxy(curProxy, proxyList);
-        curProxy = proxyList[index++];
-        if (count < 5) {
-            getURL(item, curProxy, proxyList);
-        } else {
-            emitter.emit('error', new Error('getURL proxy timeout!'));
-        }
-    });
+    // console.log(item.source_url);
+    var url = item.source_url;
+    var urlObj = URL.parse(url);
+    if (/\/to.php\?u=/i.test(url)) {
+        item.url = decodeURIComponent(urlObj.query.u);
+        emitter.emit('insertDB', item);
+        return;
+    }
+
+    if (/go.php\?id=\d+/i.test(url)) {
+        spiderURL(id, curProxy).then(function(data) {
+            item.url = data;
+            emitter.emit('insertDB', item);
+        }, function(err) {
+            badProxy(curProxy, proxyList);
+            curProxy = proxyList[index++];
+            if (count < 5) {
+                getURL(item, curProxy, proxyList);
+            } else {
+                emitter.emit('error', new Error('getURL proxy timeout!'));
+            }
+        });
+    } else {
+        item.url = $.getUnionUrl(url);
+        emitter.emit('insertDB', item);
+    }
+
 }
 
 /**
@@ -161,30 +189,31 @@ function insert(item) {
         sqlFields.push(item[v]);
     });
 
-
-    // console.log(sql, sqlFields);
+    var id = item.id;
+    var cate = item.cate;
+    // console.log(sql);
     db.query(sql, sqlFields).then(function() {
-        console.log(cate + ':' + item.id + ' → success');
-        db.query('insert into gd_link (id, cate) values (?,?)', [item.id, cate]).then(function() {}, function(err) {
-            if (err.code == 'ER_DUP_ENTRY') {
-
-            } else {
-                console.log(item.id + ' insert link error ' + err);
-            }
-        });
+        console.log(cate + ':' + id + ' → success');
+        insertLinkDB(id, cate);
     }, function(err) {
-        if (err.code == 'ER_DUP_ENTRY') {
+        if (err.code === 'ER_DUP_ENTRY') {
             //在多个分类需要处理
-            db.query('insert into gd_link (id, cate) values (?,?)', [item.id, cate]).then(function() {}, function(err) {
-                if (err.code == 'ER_DUP_ENTRY') {} else {
-                    console.log(item.id + ' insert link error2 ' + err);
-                }
-            });
+            insertLinkDB(id, cate);
         } else {
             console.log(err);
         }
     });
 
+}
+
+function insertLinkDB(id, cate) {
+    db.query('insert into gd_link (id, cate) values (?,?)', [id, cate]).then(function() {}, function(err) {
+        if (err.code == 'ER_DUP_ENTRY') {
+
+        } else {
+            console.log(id + ' insert link error ' + err);
+        }
+    });
 }
 /**
  * 代理刨除

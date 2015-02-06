@@ -32,24 +32,24 @@ var emitter = new Event();
 var index = 0;
 //1.获取 proxy list
 getProxyList(100)
-//2. 获取分类列表
-.then(function(proxyList) {
-    // console.log(proxyList);
-    listArray.forEach(function(item) {
-        getList(proxyList, item)
-        //3.获取content详情
-        .then(getContent);
-    });
-    //4.获取url内容
-    emitter.on('needURL', getURL)
-    //5.插入数据库
-    .on('insertDB', insert)
-        .on('error', function(err) {
-            console.log(err);
+    //2. 获取分类列表
+    .then(function(proxyList) {
+        // console.log(proxyList);
+        listArray.forEach(function(item) {
+            getList(proxyList, item)
+                //3.获取content详情
+                .then(getContent);
         });
-}, function(err) {
-    console.log('getProxyList error:', err);
-});
+        //4.获取url内容
+        emitter.on('needURL', getURL)
+            //5.插入数据库
+            .on('insertDB', insert)
+            .on('error', function(err) {
+                console.log(err);
+            });
+    }, function(err) {
+        console.log('getProxyList error:', err);
+    });
 
 //获取分类列表
 function getList(proxyList, keywords) {
@@ -73,7 +73,7 @@ function getList(proxyList, keywords) {
             });
         }, function(err) {
             //代理刨除
-            badProxy(curProxy, proxyList);
+            badProxy(proxyObject, proxyList);
             proxyList = proxyList[index++];
             if (count < 10) {
                 handler(cate);
@@ -207,20 +207,20 @@ function insert(item) {
 }
 
 function insertLinkDB(id, cate) {
-    db.query('insert into gd_link (id, cate) values (?,?)', [id, cate]).then(function() {}, function(err) {
-        if (err.code == 'ER_DUP_ENTRY') {
+        db.query('insert into gd_link (id, cate) values (?,?)', [id, cate]).then(function() {}, function(err) {
+            if (err.code == 'ER_DUP_ENTRY') {
 
-        } else {
-            console.log(id + ' insert link error ' + err);
-        }
-    });
-}
-/**
- * 代理刨除
- * @param  {[type]} pObj      [description]
- * @param  {[type]} proxyList [description]
- * @return {[type]}           [description]
- */
+            } else {
+                console.log(id + ' insert link error ' + err);
+            }
+        });
+    }
+    /**
+     * 代理刨除
+     * @param  {[type]} pObj      [description]
+     * @param  {[type]} proxyList [description]
+     * @return {[type]}           [description]
+     */
 function badProxy(pObj, proxyList) {
     //说明有问题，更新下数据库标注下
     if (pObj.errno > 5) {

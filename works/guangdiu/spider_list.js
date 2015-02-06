@@ -15,7 +15,7 @@ var spiderMan = function(url, proxy, timeout) {
     var defer = Q.defer();
 
     spider(opt, function(data, error) {
-        if (error || !data) {
+        if (error || !data || !(data.item && data.item.length)) {
             defer.reject(error);
         } else {
             defer.resolve(data.item);
@@ -51,8 +51,8 @@ var spiderMan = function(url, proxy, timeout) {
                 },
                 source_url: {
                     selector: '.rightlinks .innergototobuybtn',
-                    handler: function($node, $){
-                        if($node.find('a').length){
+                    handler: function($node, $) {
+                        if ($node.find('a').length) {
                             return $node.find('a').attr('href');
                         }
                         return $node.attr('href');

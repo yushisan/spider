@@ -60,7 +60,7 @@ getProxyList(100)
 //获取分类列表
 function getList(proxyList, keywords, us) {
     var deferred = Q.defer();
-
+    us = us ? 1 : 0;
     var count = 0;
     var handler = function(cate) {
         var url = 'http://guangdiu.com/cate.php?k=' + cate;
@@ -72,6 +72,7 @@ function getList(proxyList, keywords, us) {
         spiderList(url, proxyObject.proxy).then(function(data) {
             data.map(function(item) {
                 item.cate = cate;
+                item.us = us;
                 item.time = Math.ceil(Date.now() / 1000);
             });
             // console.log(data);
@@ -127,7 +128,7 @@ function getContent(data) {
         if (unqObj[item.id]) {
             //说明已经抓取了，直接添加关系链
             console.log('不是唯一id：' + id);
-            insertLinkDB(item.id, item.cate);
+            insertLinkDB(item.id, item.cate, item.us ? 1 : 0);
         } else {
             unqObj[item.id] = 1;
             handler(item).then(function(data) {}, function(err) {
@@ -188,9 +189,10 @@ function insert(item) {
         'mall',
         'content',
         'url',
-        'source_url'
+        'source_url',
+        'us'
     ];
-
+    item.us = item.us ? 1 : 0;
     var sql = 'insert into gd_content (' + arr.join(',') + ') values ';
     sql += ('(' + new Array(arr.length + 1).join('?').split('').join(',') + ')');
 
@@ -201,10 +203,11 @@ function insert(item) {
 
     var id = item.id;
     var cate = item.cate;
+    var us = item.us ? 1 : 0;
     // console.log(sql);
     db.query(sql, sqlFields).then(function() {
         console.log(cate + ':' + id + ' → success');
-        insertLinkDB(id, cate);
+        insertLinkDB(id, cate, us);
     }, function(err) {
         if (err.code === 'ER_DUP_ENTRY') {
             //在多个分类需要处理
@@ -216,21 +219,22 @@ function insert(item) {
 
 }
 
-function insertLinkDB(id, cate) {
-        db.query('insert into gd_link (id, cate) values (?,?)', [id, cate]).then(function() {}, function(err) {
-            if (err.code == 'ER_DUP_ENTRY') {
+function insertLinkDB(id, cate, us) {
 
-            } else {
-                console.log(id + ' insert link error ' + err);
-            }
-        });
-    }
-    /**
-     * 代理刨除
-     * @param  {[type]} pObj      [description]
-     * @param  {[type]} proxyList [description]
-     * @return {[type]}           [description]
-     */
+    db.query('insert into gd_link (id, cate, us) values (?,?,?)', [id, cate, us ? 1 : 0]).then(function() {}, function(err) {
+        if (err.code == 'ER_DUP_ENTRY') {
+
+        } else {
+            console.log(id + ' insert link error ' + err);
+        }
+    });
+};
+/**
+ * 代理刨除
+ * @param  {[type]} pObj      [description]
+ * @param  {[type]} proxyList [description]
+ * @return {[type]}           [description]
+ */
 function badProxy(pObj, proxyList) {
     //说明有问题，更新下数据库标注下
     if (pObj.errno > 5) {

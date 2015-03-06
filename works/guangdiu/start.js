@@ -40,6 +40,12 @@ getProxyList(100)
                 //3.获取content详情
                 .then(getContent);
         });
+        //获取海淘信息
+        listArray.forEach(function(item) {
+            getList(proxyList, item, true)
+                //3.获取content详情
+                .then(getContent);
+        });
         //4.获取url内容
         emitter.on('needURL', getURL)
             //5.插入数据库
@@ -52,12 +58,15 @@ getProxyList(100)
     });
 
 //获取分类列表
-function getList(proxyList, keywords) {
+function getList(proxyList, keywords, us) {
     var deferred = Q.defer();
 
     var count = 0;
     var handler = function(cate) {
         var url = 'http://guangdiu.com/cate.php?k=' + cate;
+        if (us) {
+            url += '&c=us';
+        }
         var proxyObject = proxyList[index++];
 
         spiderList(url, proxyObject.proxy).then(function(data) {
@@ -85,6 +94,7 @@ function getList(proxyList, keywords) {
         });
     };
     handler(keywords);
+
 
     return deferred.promise;
 }

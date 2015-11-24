@@ -16,7 +16,7 @@ function spiderMan(id, proxyObj, timeout) {
         opt.proxy = proxy;
     }
     var defer = Q.defer();
-    spider(opt, function(data, error) {
+    spider(opt, function(error, data) {
         if (error || !data) {
             defer.reject(error);
         } else {

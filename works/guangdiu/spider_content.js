@@ -15,7 +15,7 @@ function spiderMan(id, proxy, timeout) {
     }
     var defer = Q.defer();
 
-    spider(opt, function(data, error) {
+    spider(opt, function(error, data) {
         if (error || !data) {
             defer.reject(error);
         } else {
@@ -30,7 +30,7 @@ function spiderMan(id, proxy, timeout) {
                 if (!content) {
                     content = $node.html();
                 }
-                if(!content){
+                if (!content) {
                     content = '';
                 }
                 return (content || '').replace(/<p>(\s*|[&nbsp;])<\/p>/, '').trim();

@@ -5,8 +5,8 @@ spider({
     proxy: 'http://42.62.61.245:80',
     uri: 'http://guangdiu.com',
     timeout: 5e3
-}, function(data, error, req) {
-    if(!error && data){
+}, function(error, data, req) {
+    if (!error && data) {
         var t = Date.now();
         console.log(t - now);
     }

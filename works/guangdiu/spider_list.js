@@ -14,7 +14,7 @@ var spiderMan = function(url, proxy, timeout) {
     }
     var defer = Q.defer();
 
-    spider(opt, function(data, error) {
+    spider(opt, function(error, data) {
         if (error || !data || !(data.item && data.item.length)) {
             defer.reject(error);
         } else {

@@ -14,7 +14,7 @@ var dbConfig = {
 //设置
 var db = new DB(dbConfig, 10e3);
 
-spider.get('http://www.youdaili.net/Daili/', function(data) {
+spider.get('http://www.youdaili.net/Daili/', function(err, data) {
     var count = 0;
     var proxys = [];
     var items = data.item;

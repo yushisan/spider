@@ -4,9 +4,8 @@ var db = require('./_db');
 
 var testProxy = require('./test_proxy_speed');
 var uniqueObj = {};
-spider.get('http://www.cz88.net/proxy/index.aspx', function(err, data) {
+spider.get('http://www.cz88.net/proxy/', function(err, data) {
     var content = data.content;
-
     var arr = [];
     for (var i = 5, len = content.length; i < len; i++) {
         var v = content[i];
@@ -46,7 +45,7 @@ spider.get('http://www.cz88.net/proxy/index.aspx', function(err, data) {
     });
 }, {
     content: {
-        selector: '.Main table tr td',
+        selector: '.box694 li',
         handler: 'text'
     }
 });

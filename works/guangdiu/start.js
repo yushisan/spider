@@ -95,8 +95,6 @@ function getList(proxyList, keywords, us) {
         });
     };
     handler(keywords);
-
-
     return deferred.promise;
 }
 
@@ -228,7 +226,7 @@ function insertLinkDB(id, cate, us) {
             console.log(id + ' insert link error ' + err);
         }
     });
-};
+}
 /**
  * 代理刨除
  * @param  {[type]} pObj      [description]
@@ -236,11 +234,12 @@ function insertLinkDB(id, cate, us) {
  * @return {[type]}           [description]
  */
 function badProxy(pObj, proxyList) {
+    var sql;
     //说明有问题，更新下数据库标注下
     if (pObj.errno > 5) {
-        var sql = 'UPDATE proxy set `status` =0 where id =' + pObj.id;
+        sql = 'UPDATE proxy set `status` =0 where id =' + pObj.id;
     } else {
-        var sql = 'update proxy set errno=errno+1 where id=' + pObj.id;
+        sql = 'update proxy set errno=errno+1 where id=' + pObj.id;
     }
     var i = proxyList.indexOf(pObj);
     proxyList.splice(i, 1);

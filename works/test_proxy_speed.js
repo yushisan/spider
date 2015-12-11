@@ -11,7 +11,7 @@ function test(proxy, domain, timeout) {
         uri: domain,
         proxy: proxy,
         timeout: timeout || 5e3
-    }, function(data, error, req) {
+    }, function(error, data, req) {
         if (!error && data) {
             var time2 = Date.now();
             deferred.resolve({

@@ -4,15 +4,14 @@ var db = require('./_db');
 
 var testProxy = require('./test_proxy_speed');
 var uniqueObj = {};
-spider.get('http://www.cz88.net/proxy/index.aspx', function(data) {
+spider.get('http://www.cz88.net/proxy/', function(err, data) {
     var content = data.content;
-
     var arr = [];
     for (var i = 5, len = content.length; i < len; i++) {
         var v = content[i];
         if (/\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}/.test(v)) {
             arr.push(v + ':' + content[i + 1]);
-            i+=5;
+            i += 5;
         }
     }
 
@@ -46,7 +45,7 @@ spider.get('http://www.cz88.net/proxy/index.aspx', function(data) {
     });
 }, {
     content: {
-        selector: '.Main table tr td',
+        selector: '.box694 li',
         handler: 'text'
     }
 });

@@ -12,7 +12,7 @@ function get(proxyObject, domain, timeout) {
         uri: domain,
         proxy: proxy,
         timeout: timeout || 7e3
-    }, function(data, error, req) {
+    }, function(error, data, req) {
         if (!error && data) {
             deferred.resolve(data);
         } else {
